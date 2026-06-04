@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>while True: learn()</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #111; }
+    #unity-canvas { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+    #lo { position: fixed; inset: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 1000; transition: opacity 0.4s; }
+    #lo.hidden { opacity: 0; pointer-events: none; }
+    #bar { width: 300px; height: 4px; background: #333; }
+    #fill { height: 100%; width: 0%; background: #fff; transition: width 0.12s; }
+    #txt { color: #666; font: 13px monospace; }
+    #credit { position: fixed; bottom: 14px; right: 14px; text-align: right; line-height: 1.5; pointer-events: auto; }
+    #lo.hidden #credit { display: none; }
+    #credit span { display: block; color: #555; font: 12px monospace; }
+    #credit a { display: block; color: #4a8fc4; font: 12px monospace; text-decoration: none; }
+    #credit a:hover { color: #7ab8f0; }
+  </style>
+</head>
+<body>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="lo">
+  <div id="bar"><div id="fill"></div></div>
+  <div id="txt">…</div>
+  <div id="credit">
+    <span>ported by @._.dasher._.</span>
+    <a href="https://wasm.rip/" target="_blank" rel="noopener">wasm.rip</a>
+  </div>
+</div>
+<script>
+(function () {
+  var BUILD         = "Build";
+  var LOADER_URL    = BUILD + "/05341b76d4a90f70e910dd0a415d4c33.loader.js";
+  var DATA_BASE     = BUILD + "/e6efe8cba9cbd0918a61bd9422a0c936.data";
+  var FRAMEWORK     = BUILD + "/ed872236fe35d90b5dedd2ee8c53702d.framework.js";
+  var WASM          = BUILD + "/3398f1e7fc498608eb378e846b0173f0.wasm";
+  var DATA_CHUNKS   = 7;
+  var DATA_TOTAL_MB = 128.78;
+
+  var canvas  = document.getElementById("unity-canvas");
+  var overlay = document.getElementById("lo");
+  var barFill = document.getElementById("fill");
+  var status  = document.getElementById("txt");
+
+  function setBar(f) { barFill.style.width = Math.min(100, Math.round(f * 100)) + "%"; }
+  function fmt(mb) { return mb.toFixed(1) + " MB"; }
+
+  function fetchChunks(baseUrl, n, totalMB) {
+    var CHUNK_MB = totalMB / n;
+    var chunks = new Array(n);
+    var loadedN = 0;
+    var promises = [];
+    for (var i = 0; i < n; i++) {
+      (function (idx) {
+        var url = baseUrl + ".chunk" + idx.toString().padStart(3, "0");
+        promises.push(fetch(url).then(function (r) { return r.arrayBuffer(); }).then(function (buf) {
+          chunks[idx] = buf; loadedN++;
+          var doneMB = loadedN * CHUNK_MB;
+          status.textContent = "Downloading… (" + fmt(Math.min(doneMB, totalMB)) + " / " + fmt(totalMB) + ")";
+          setBar((loadedN / n) * 0.65);
+        }));
+      })(i);
+    }
+    return Promise.all(promises).then(function () {
+      status.textContent = "Assembling…"; setBar(0.67);
+      var total = chunks.reduce(function (s, c) { return s + c.byteLength; }, 0);
+      var merged = new Uint8Array(total); var off = 0;
+      for (var j = 0; j < chunks.length; j++) { merged.set(new Uint8Array(chunks[j]), off); off += chunks[j].byteLength; }
+      return URL.createObjectURL(new Blob([merged]));
+    });
+  }
+
+  status.textContent = "Loading engine…";
+  var loaderScript = document.createElement("script");
+  loaderScript.src = LOADER_URL;
+  loaderScript.onload = function () {
+    var dataPromise = DATA_CHUNKS > 0
+      ? fetchChunks(DATA_BASE, DATA_CHUNKS, DATA_TOTAL_MB)
+      : Promise.resolve(DATA_BASE);
+    dataPromise.then(function (blobUrl) {
+      status.textContent = "Starting…"; setBar(0.70);
+      return createUnityInstance(canvas, {
+        dataUrl: blobUrl, frameworkUrl: FRAMEWORK, codeUrl: WASM,
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Luden.io", productName: "while True: learn()", productVersion: "1.8.105",
+      }, function (p) {
+        var pct = Math.round((0.70 + p * 0.30) * 100);
+        status.textContent = "Loading… " + pct + "%"; setBar(0.70 + p * 0.30);
+      });
+    }).then(function (u) {
+      setBar(1); status.textContent = "Ready";
+      setTimeout(function () { overlay.classList.add("hidden"); setTimeout(function () { overlay.style.display = "none"; }, 600); }, 200);
+      function resize() { canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px"; }
+      window.addEventListener("resize", resize); resize();
+    }).catch(function (err) {
+      status.textContent = "Error — see console"; status.style.color = "#ff6060"; console.error(err);
+    });
+  };
+  document.body.appendChild(loaderScript);
+})();
+</script>
+</body>
+</html>
