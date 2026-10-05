@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <base href="https://cdn.jsdelivr.net/gh/dashiellbenton/ports@5e78364d5bba78d6b7c43fbd890663ff621702f3/toasterball/">
     <title>Toasterball</title>
     <style>
       /* black, not the Unity brown: whatever the canvas does not cover reads as a
@@ -146,7 +147,7 @@
       // this page; this stamps the same root onto our own URL so the C# level streamer
       // (which resolves bundle URLs against Application.absoluteURL, ignoring <base>)
       // fetches LevelBundles from the CDN too instead of from wherever the page is hosted.
-      var CDN_BASE = "";
+      var CDN_BASE = "https://cdn.jsdelivr.net/gh/dashiellbenton/ports@5e78364d5bba78d6b7c43fbd890663ff621702f3/toasterball";
       if (CDN_BASE) {
         var u = new URL(window.location.href);
         if (u.searchParams.get("cdn") !== CDN_BASE) {
@@ -161,7 +162,7 @@
       // ourselves, keyed on the release tag so a new release invalidates the old copy.
       var CACHE_KEY = "toasterball-dashiellbenton-ports-b15";
       // Second host for every payload file, used when the CDN keeps failing one.
-      var MIRROR = "";
+      var MIRROR = "https://dashiellbenton.github.io/ports/toasterball";
 
       var canvas  = document.querySelector("#unity-canvas");
       var bar     = document.querySelector("#bar");
