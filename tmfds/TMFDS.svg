@@ -200,15 +200,15 @@
       "b70.data.unityweb.part001",
       "b70.data.unityweb.part002"
     ],
-    "bytes": 54829683
+    "bytes": 54834824
   },
   "code": {
     "file": "b70.wasm.unityweb",
-    "bytes": 8353010
+    "bytes": 8361997
   },
   "framework": {
     "file": "b70.framework.js.unityweb",
-    "bytes": 81016
+    "bytes": 81021
   },
   "loader": {
     "file": "b70.loader.js",
@@ -233,7 +233,7 @@
       // itself; here the loader is handed a blob: URL, so Unity caches nothing and every
       // refresh would re-download the whole payload. We therefore cache the raw parts
       // ourselves, keyed on the release tag so a new release invalidates the old copy.
-      var CACHE_KEY = "tmfds-dashiellbenton-ports-tmfds-default-b70";
+      var CACHE_KEY = "tmfds-dashiellbenton-ports-tmfds-default-b70-48016b43";
 
       var canvas  = document.querySelector("#unity-canvas");
       var bar     = document.querySelector("#bar");
